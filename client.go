@@ -9,7 +9,10 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // A Client stores the client informations
@@ -29,6 +32,12 @@ func NewClient(url, username, password string) (c *Client) {
 	c = &Client{}
 	c.username = username
 	c.password = password
+	httpTimeout := 0
+
+	t, err := strconv.Atoi(os.Getenv("TESTRAIL_HTTP_TIMEOUT"))
+	if err == nil {
+		httpTimeout = t
+	}
 
 	c.url = url
 	if !strings.HasSuffix(c.url, "/") {
@@ -39,7 +48,7 @@ func NewClient(url, username, password string) (c *Client) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	c.httpClient = &http.Client{Transport: tr}
+	c.httpClient = &http.Client{Transport: tr, Timeout: time.Duration(httpTimeout) * time.Second}
 
 	return
 }
